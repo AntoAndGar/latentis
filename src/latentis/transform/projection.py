@@ -72,7 +72,40 @@ def angular_proj(
     anchors = F.normalize(anchors, p=2, dim=-1)
 
     x = (x @ anchors.mT).clamp(-1.0, 1.0)
-    x = torch.arccos(x) / torch.pi
+    # now it is a similarity measure (like cosine) and not a distance measure
+    # added as langular the distance measure
+    x = 1.0 - torch.acos(x) / torch.pi
+
+    return x
+
+
+@projection_fn(name="langular")
+def langular_proj(
+    x: torch.Tensor,
+    *,
+    anchors: torch.Tensor,
+) -> torch.Tensor:
+    x = F.normalize(x, p=2, dim=-1)
+    anchors = F.normalize(anchors, p=2, dim=-1)
+
+    x = (x @ anchors.mT).clamp(-1.0, 1.0)
+    # this is a distance measure (like lp, l1)
+    x = torch.acos(x) / torch.pi
+
+    return x
+
+
+@projection_fn(name="uv")
+def uv_proj(
+    x: torch.Tensor,
+    *,
+    anchors: torch.Tensor,
+) -> torch.Tensor:
+    x = F.normalize(x, p=2, dim=-1)
+    anchors = F.normalize(anchors, p=2, dim=-1)
+
+    u, _, v = torch.linalg.svd(anchors.mT, full_matrices=False)
+    x = x @ (u @ v)
 
     return x
 

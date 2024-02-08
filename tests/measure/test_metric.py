@@ -22,6 +22,7 @@ TOL = 1e-6
         (F.mse_loss),
         (F.l1_loss),
         (lambda x, y: torch.trace(torch.matmul(x, y.t()))),
+        (lambda x, y: 1 - torch.acos((x @ y.t()).clamp(-1.0, 1.0)) / torch.pi),  # angular similarity
     ],
 )
 def test_metric(metric_fn: Callable[[Space, Space], torch.Tensor], same_shape_spaces):

@@ -19,8 +19,10 @@ from latentis.transform.projection import (
     cosine_proj,
     euclidean_proj,
     l1_proj,
+    langular_proj,
     lp_proj,
     pointwise_wrapper,
+    uv_proj,
 )
 
 if TYPE_CHECKING:
@@ -48,6 +50,11 @@ def random_isotropic_scaling(random_seed: int) -> torch.Tensor:
     [
         (cosine_proj, True),
         (angular_proj, True),
+        (langular_proj, True),
+        # ill posed for uv projection it can work only in matrix form
+        # (anchors must be a whole space at least 2D)
+        # so it fail for pointwise_wrapper
+        # (uv_proj, True),
         (euclidean_proj, True),
         (l1_proj, True),
         (functools.partial(lp_proj, p=10), True),
@@ -84,6 +91,90 @@ def test_pointwise_wrapper(projection_fn, unsqueeze: bool, tensor_space_with_ref
             lambda x: x @ random_ortho_matrix(random_seed=42) + 100,
             True,
             [Centering()],
+            [],
+        ),
+        (
+            angular_proj,
+            lambda x: x @ random_ortho_matrix(random_seed=42),
+            True,
+            [],
+            [],
+        ),
+        (
+            angular_proj,
+            lambda x: (x + 20) @ random_ortho_matrix(42),
+            True,
+            [Centering()],
+            [],
+        ),
+        (
+            angular_proj,
+            lambda x: (x) @ random_ortho_matrix(42) + 20,
+            True,
+            [Centering()],
+            [],
+        ),
+        (
+            angular_proj,
+            lambda x: (x) @ random_ortho_matrix(42) * 100,
+            True,
+            [],
+            [],
+        ),
+        (
+            angular_proj,
+            lambda x: (x) @ random_ortho_matrix(42) + 20,
+            False,
+            [],
+            [],
+        ),
+        (
+            angular_proj,
+            lambda x: x @ random_ortho_matrix(random_seed=42),
+            True,
+            [],
+            [],
+        ),
+        (
+            uv_proj,
+            lambda x: x @ random_ortho_matrix(random_seed=42),
+            False,
+            [],
+            [],
+        ),
+        (
+            uv_proj,
+            lambda x: (x + 20) @ random_ortho_matrix(42),
+            True,
+            [Centering()],
+            [],
+        ),
+        (
+            uv_proj,
+            lambda x: (x) @ random_ortho_matrix(42) + 20,
+            True,
+            [Centering()],
+            [],
+        ),
+        (
+            uv_proj,
+            lambda x: (x) @ random_ortho_matrix(42) * 100,
+            True,
+            [],
+            [],
+        ),
+        (
+            uv_proj,
+            lambda x: (x) @ random_ortho_matrix(42) + 20,
+            False,
+            [],
+            [],
+        ),
+        (
+            uv_proj,
+            lambda x: x @ random_ortho_matrix(random_seed=42),
+            True,
+            [],
             [],
         ),
         (
@@ -172,6 +263,27 @@ def test_pointwise_wrapper(projection_fn, unsqueeze: bool, tensor_space_with_ref
         ),
         (
             cosine_proj,
+            lambda x: (x + 100) * random_isotropic_scaling(42) + 100,
+            True,
+            [Centering()],
+            [],
+        ),
+        (
+            uv_proj,
+            lambda x: (x + 100) * random_isotropic_scaling(42),
+            False,
+            [],
+            [],
+        ),
+        (
+            uv_proj,
+            lambda x: (x + 100) * random_isotropic_scaling(42),
+            True,
+            [Centering()],
+            [],
+        ),
+        (
+            uv_proj,
             lambda x: (x + 100) * random_isotropic_scaling(42) + 100,
             True,
             [Centering()],
